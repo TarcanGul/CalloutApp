@@ -13,6 +13,10 @@ import android.hardware.camera2.*;
 import android.app.AlertDialog;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.widget.Button;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -38,7 +42,7 @@ import java.util.ArrayList;
  * which will be used with the Python algorithm that extracts information from a callout picture.
  */
 
-public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener{
+public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener, View.OnClickListener{
 
     //CameraManager allows us to reach any camera within the system, these systems can also be externally connected.
     CameraManager manager;
@@ -48,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     //TextureView is the object that holds the camera stream in the main screen
     TextureView textureView;
+    Button takePhotoButton;
+
 
     //Every camera in the device(front, rear or external) has a unique string ID. Thus we will be needing this ID for locating the rear camera.
     static String pickedCameraID;
@@ -99,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             dialog.show();
         }
 
+        takePhotoButton = (Button) findViewById(R.id.takePhotoButton);
+        takePhotoButton.setOnClickListener(this);
     }
 
     //Capture Callback interface is for receiving real time updates of our capture requests.
@@ -239,5 +247,16 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+    }
+
+    //For the take photo button.
+    @Override
+    public void onClick(View v) {
+        try{
+            Process p = Runtime.getRuntime().exec("python ocr.py");
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+
     }
 }
