@@ -15,6 +15,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import org.python.util.PythonInterpreter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     //TextureView is the object that holds the camera stream in the main screen
     TextureView textureView;
     Button takePhotoButton;
-
+    PythonInterpreter interpreter = new PythonInterpreter();
 
     //Every camera in the device(front, rear or external) has a unique string ID. Thus we will be needing this ID for locating the rear camera.
     static String pickedCameraID;
@@ -252,11 +253,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     //For the take photo button.
     @Override
     public void onClick(View v) {
-        try{
-            Process p = Runtime.getRuntime().exec("python ocr.py");
-        }catch(IOException e){
-            e.printStackTrace();
-        }
+            //Use Python Interpreter
+
 
     }
 }
