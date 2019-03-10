@@ -13,8 +13,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
-import org.python.util.PythonInterpreter;
+
 
 
 /**
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap current_image;
     Uri imageUri;
     //PythonInterpreter interpreter = new PythonInterpreter();
+    public static Toast transitionToast;
     ImageView i_view;
     Button takePhotoAgainButton;
     Button parseAndSendButton;
@@ -78,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
         i_view = (ImageView) findViewById(R.id.imageView);
         takePhotoAgainButton = (Button) findViewById(R.id.photoAgainButton);
         parseAndSendButton = (Button) findViewById(R.id.parseAndSendButton);
-
         takePhotoAgainButton.setOnClickListener(takePhotoAgainListener);
         parseAndSendButton.setOnClickListener(parseAndSendListener);
 
@@ -89,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        //If camera requested and no error is stopping it.
         if ((requestCode == CAMERA_REQUEST) && (resultCode == Activity.RESULT_OK)) {
             // Check if the result includes a thumbnail Bitmap
                 try {
@@ -123,7 +125,10 @@ public class MainActivity extends AppCompatActivity {
     View.OnClickListener parseAndSendListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
+            transitionToast = Toast.makeText(getApplicationContext(), "Parsing...", Toast.LENGTH_LONG);
+            Intent intent = new Intent(MainActivity.this, ParserActivity.class);
+            transitionToast.show();
+            startActivity(intent);
         }
     };
 

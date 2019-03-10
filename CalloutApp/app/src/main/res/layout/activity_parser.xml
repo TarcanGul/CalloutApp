@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="100"
+    android:orientation="vertical"
+    tools:context=".ParserActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        android:text="Date"
+        android:textSize="36dp"
+        />
+    <TextView
+        android:id="@+id/dateField"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        android:text="Time"
+        android:textSize="36dp"
+        />
+    <TextView
+        android:id="@+id/timeField"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        android:text="Location"
+        android:textSize="36dp"
+        />
+    <Spinner
+        android:id="@+id/locationField"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        android:text="Title"
+        android:textSize="36dp"
+        />
+    <Spinner
+        android:id="@+id/titleField"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="10"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="20"
+        android:weightSum="100"
+        android:orientation="horizontal"
+        >
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:text="Back to camera screen"
+            />
+        <Button
+            android:id="@+id/sendButton"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:text="Send to Google Calendar"
+            />
+
+    </LinearLayout>
+
+
+</LinearLayout>
