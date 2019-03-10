@@ -1,24 +1,43 @@
 package com.example.nailt.calloutapp;
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.params.OutputConfiguration;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.hardware.camera2.*;
 import android.app.AlertDialog;
+import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+
 import org.python.util.PythonInterpreter;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * To do list
@@ -38,27 +57,22 @@ import java.util.ArrayList;
  *
  */
 
+
 /**
  * The goal of this activity is to setup the camera and have a button that can record a picture,
  * which will be used with the Python algorithm that extracts information from a callout picture.
  */
 
-public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener, View.OnClickListener{
+public class MainActivity extends AppCompatActivity {
 
-    //CameraManager allows us to reach any camera within the system, these systems can also be externally connected.
-    CameraManager manager;
-
-    //Handler is used for communication between the camera thread and the main thread (arg of openCamera())
-    Handler handler = new Handler();
-
-    //TextureView is the object that holds the camera stream in the main screen
-    TextureView textureView;
-    Button takePhotoButton;
-    PythonInterpreter interpreter = new PythonInterpreter();
-
-    //Every camera in the device(front, rear or external) has a unique string ID. Thus we will be needing this ID for locating the rear camera.
-    static String pickedCameraID;
-
+    private static final int CAMERA_REQUEST = 1888;
+    public static final int THUMBNAIL_SIZE = 200;
+    Bitmap current_image;
+    Uri imageUri;
+    //PythonInterpreter interpreter = new PythonInterpreter();
+    ImageView i_view;
+    Button takePhotoAgainButton;
+    Button parseAndSendButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -70,191 +84,60 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.CAMERA,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+
+            }, 200);
+            return;
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+
             }, 200);
             return;
         }
 
-        //Initializing the textureView object
-        textureView = (TextureView) findViewById(R.id.textureView);
-        //This class also implements surface texture listener, and that is the interface we use to open the camera.
-        textureView.setSurfaceTextureListener(this);
+        i_view = (ImageView) findViewById(R.id.imageView);
+        takePhotoAgainButton = (Button) findViewById(R.id.photoAgainButton);
+        parseAndSendButton = (Button) findViewById(R.id.parseAndSendButton);
 
-        //Setting up the CameraManager object
-        manager = (CameraManager) MainActivity.this.getSystemService(Context.CAMERA_SERVICE);
+        takePhotoAgainButton.setOnClickListener(takePhotoAgainListener);
+        parseAndSendButton.setOnClickListener(parseAndSendListener);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, CAMERA_REQUEST);
 
-        try {
-            String[] availableCameras = manager.getCameraIdList(); //Getting all the cameras in the device
-            for (int i = 0; i < availableCameras.length; i++) {
-                //Getting camera info
-                CameraCharacteristics cameraInfo = manager.getCameraCharacteristics(availableCameras[i]);
-                //Checking if the camera is the back camera
-                if (cameraInfo.get(CameraCharacteristics.LENS_FACING).equals(CameraMetadata.LENS_FACING_BACK)) {
-                    pickedCameraID = availableCameras[i]; //Pick the camera
-                    break;
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if ((requestCode == CAMERA_REQUEST) && (resultCode == Activity.RESULT_OK)) {
+            // Check if the result includes a thumbnail Bitmap
+                // TODO It is only a thumbnail, turn into higher quality.
+                // in outputFileUri. Perhaps copying it to the app folder
+                try {
+                    current_image = (Bitmap) data.getExtras().get("data");
+                    i_view.setImageBitmap(current_image);
                 }
-            }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
 
-            //Now the pickedCameraID will be used in textureView, with the camera thread.
         }
-        catch(CameraAccessException | SecurityException e)
-        {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Error");
-            builder.setMessage(e.getMessage());
-            AlertDialog dialog = builder.create();
-            dialog.show();
-        }
-
-        takePhotoButton = (Button) findViewById(R.id.takePhotoButton);
-        takePhotoButton.setOnClickListener(this);
     }
 
-    //Capture Callback interface is for receiving real time updates of our capture requests.
-    CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
+    View.OnClickListener takePhotoAgainListener = new View.OnClickListener() {
         @Override
-        public void onCaptureStarted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, long timestamp, long frameNumber) {
-            super.onCaptureStarted(session, request, timestamp, frameNumber);
+        public void onClick(View v) {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(intent, CAMERA_REQUEST);
         }
     };
 
-    //
+    View.OnClickListener parseAndSendListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
 
-    /**
-     * This is the most important method in opening the camera. This method runs on a separate thread
-     * and doesn't start until pickedCameraID is received.
-     * @param texture will be used in initializing a surface class,
-     *                which will let us to create a display of what the rear camera sees
-     * @param width //Width of a image. Isn't in use right now, might be in future.
-     * @param height //Height of a image. Isn't in use right now, might be in future.
-     *
-     * It is useful to know that with width and height we can create Size objects and we can specify
-     * the resolution of the image we want (620 * 480 can be a good default choice).
-     */
-    public void onSurfaceTextureAvailable(final SurfaceTexture texture, int width, int height) {
-
-        try {
-            while(pickedCameraID == null)
-            {
-                //Polling until we receive the cameraID from the onCreate method
-                //POINT OF DISCUSSION(by Tarcan): Is setting ID to "0" at the start always give the rear camera?
-                //If it does, we can start the app even faster
-            }
-            manager.openCamera(pickedCameraID, new CameraDevice.StateCallback() {
-                @Override
-                public void onOpened(@NonNull final CameraDevice camera){
-                    //Creating the surface object with the SurfaceTexture object. We set it to final because we will use it in the inner class
-                    final Surface surface = new Surface(texture);
-                    //OutputConfiguration is useful for describing camera output.
-                    OutputConfiguration config = new OutputConfiguration(surface);
-                    //List is needed for createCaptureSessionByOutputConfigurations method
-                    ArrayList<OutputConfiguration> listOfConfigurations = new ArrayList<>();
-                    listOfConfigurations.add(config);
-                    try
-                    {
-                        //This is the method where we initialize the stream.
-                        camera.createCaptureSessionByOutputConfigurations(listOfConfigurations, new CameraCaptureSession.StateCallback() {
-                            @Override
-                            public void onConfigured(@NonNull CameraCaptureSession session)
-                            {
-                                //Now we successfully  have opened the camera. We can use it.
-                                useCamera(camera, session, surface);
-                            }
-
-                            @Override
-                            public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-
-                            }
-                        }, handler);
-                    }
-                    catch(CameraAccessException e)
-                    {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setTitle("Error");
-                        builder.setMessage("Camera configiration failed.");
-                        AlertDialog dialog = builder.create();
-                        dialog.show();
-                    }
-
-                }
-
-                @Override
-                public void onDisconnected(@NonNull CameraDevice camera) {
-
-                }
-
-                @Override
-                public void onError(@NonNull CameraDevice camera, int error) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle("Error");
-                    builder.setMessage("Something happened to the camera");
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                }
-
-                @Override
-                public void onClosed(@NonNull CameraDevice camera) {
-                    camera.close();
-                }
-
-            }, null);
         }
-        catch(CameraAccessException | SecurityException cae)
-        {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Error");
-            builder.setMessage(cae.getMessage());
-            AlertDialog dialog = builder.create();
-            dialog.show();
-            //TODO: add a retry button to the dialog
-        }
-
-    }
+    };
 
 
-    /**
-     * This is the method we use after opening the camera successfully, so creating a stream of capture requests.
-     * @param camera The camera device
-     * @param session //The capture session of the camera (while camera is open)
-     * @param surface //The pixel information of where the output images will be on the screen
-     */
-    public void useCamera(CameraDevice camera, CameraCaptureSession session, Surface surface){
-        try
-        {
-            CaptureRequest.Builder requestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            requestBuilder.addTarget(surface);
-            session.setRepeatingRequest(requestBuilder.build(), captureListener, handler);
-        }
-        catch(CameraAccessException e)
-        {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Error while in capture session");
-            builder.setMessage(e.getMessage());
-            AlertDialog dialog = builder.create();
-            dialog.show();
-        }
-    }
-
-
-    //Other interface methods which allows us to control what we will do with the camera.
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        return true;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-    }
-
-    //For the take photo button.
-    @Override
-    public void onClick(View v) {
-            //Use Python Interpreter
-
-
-    }
 }
