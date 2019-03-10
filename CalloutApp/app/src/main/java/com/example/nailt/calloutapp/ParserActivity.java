@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.python.util.PythonInterpreter;
-
 public class ParserActivity extends AppCompatActivity {
 
     TextView dateField;
@@ -22,7 +20,7 @@ public class ParserActivity extends AppCompatActivity {
         titleField = (Spinner) findViewById(R.id.titleField);
 
         //TODO: Get image input from main activity
-        PythonInterpreter interpreter = new PythonInterpreter();
+        //TODO: Communicate with Flask Server to get the relevant information
         //TODO: Parse information and send to the fields
         //TODO: Send the possible strings to Spinners
 
