@@ -1,43 +1,21 @@
 package com.example.nailt.calloutapp;
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.params.OutputConfiguration;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.hardware.camera2.*;
-import android.app.AlertDialog;
-import android.util.Log;
-import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
 import org.python.util.PythonInterpreter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * To do list
@@ -73,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView i_view;
     Button takePhotoAgainButton;
     Button parseAndSendButton;
+    ContentValues values;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -102,8 +81,9 @@ public class MainActivity extends AppCompatActivity {
 
         takePhotoAgainButton.setOnClickListener(takePhotoAgainListener);
         parseAndSendButton.setOnClickListener(parseAndSendListener);
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, CAMERA_REQUEST);
+
+        //Start with taking a picture
+        takePicture();
 
     }
     @Override
@@ -111,10 +91,8 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if ((requestCode == CAMERA_REQUEST) && (resultCode == Activity.RESULT_OK)) {
             // Check if the result includes a thumbnail Bitmap
-                // TODO It is only a thumbnail, turn into higher quality.
-                // in outputFileUri. Perhaps copying it to the app folder
                 try {
-                    current_image = (Bitmap) data.getExtras().get("data");
+                    current_image = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
                     i_view.setImageBitmap(current_image);
                 }
                 catch (Exception e){
@@ -124,11 +102,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void takePicture()
+    {
+        values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "Picture taken");
+        values.put(MediaStore.Images.Media.DESCRIPTION, "Picture taken from camera");
+        imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        startActivityForResult(intent, CAMERA_REQUEST);
+    }
+
     View.OnClickListener takePhotoAgainListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(intent, CAMERA_REQUEST);
+            takePicture();
         }
     };
 
