@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="10"
-        android:text="Date"
+        android:text=" Date"
         android:textSize="36dp"
         />
     <TextView
@@ -20,12 +20,14 @@
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="10"
+        android:gravity="center"
+        android:textSize="24dp"
         />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="10"
-        android:text="Time"
+        android:text=" Time"
         android:textSize="36dp"
         />
     <TextView
@@ -33,25 +35,28 @@
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="10"
+        android:gravity="center"
+        android:textSize="24dp"
         />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="10"
-        android:text="Location"
+        android:text=" Location"
         android:textSize="36dp"
         />
     <Spinner
         android:id="@+id/locationField"
         android:layout_width="match_parent"
         android:layout_height="0px"
+        android:gravity="center"
         android:layout_weight="10"
         />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="10"
-        android:text="Title"
+        android:text=" Title"
         android:textSize="36dp"
         />
     <Spinner

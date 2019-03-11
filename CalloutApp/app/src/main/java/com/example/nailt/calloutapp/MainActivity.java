@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     public static final int THUMBNAIL_SIZE = 200;
     Bitmap current_image;
     Uri imageUri;
-    //PythonInterpreter interpreter = new PythonInterpreter();
     public static Toast transitionToast;
     ImageView i_view;
     Button takePhotoAgainButton;
@@ -72,6 +71,14 @@ public class MainActivity extends AppCompatActivity {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
+
+            }, 200);
+            return;
+        }
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.INTERNET,
 
             }, 200);
             return;
