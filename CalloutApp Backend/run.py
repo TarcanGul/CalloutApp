@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import jsonify
+from flask import jsonify, request, abort
 app = Flask(__name__)
 
 from dataExtractor import InfoExtractor
@@ -12,24 +12,41 @@ import os
 def hello():
     return "<h1>Hello!</h1>"
 
+@app.route("/input", methods=['POST', 'GET'])
+def getImageInput():
+   #if not request.json or not 'image' in request.json:
+   #     abort(400)
+   var = request.form.get('image')
+   if var == None:
+       return "<h1> Bamboozled? Have a coke! </h1>"
+   parsedText = pytesseract.image_to_string(Image.open(var))
+   parsedList = parsedText.split()
+   return "<img src=\"" + "\"" + var + "\" alt=\"Smiley face\" height=\"42\" width=\"42\">"
+
+
 #Output api
-@app.route("/output")
+@app.route("/output", methods=['GET'])
 def sendParsingInformation():
     #Getting the path of the file so we can open an image file in the directory.
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    #This is where the file input will enter.
-    parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,'PandaFlyer.jpg')))
-    parsedList = parsedText.split()
+    if request.method == 'GET':
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        #This is where the file input will enter.
+        #if not request.json or not 'image' in request.json:
+         #   abort(400)
+        parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,'PandaFlyer.jpg')))
+        parsedList = parsedText.split()
 
-    #Creating extractor object
-    extractor = InfoExtractor()
-    extractor.extractWords(parsedList)
-
-    #Print the date(might be inaccurate)
-    date = extractor.getDate()
-    time = "3 pm"
-    locations = extractor.getLocations()
-    return jsonify(date=date, time=time, locations=locations)
+        #Creating extractor object
+        extractor = InfoExtractor()
+        extractor.extractWords(parsedList)
+        
+        #Print the date(might be inaccurate)
+        date = extractor.getDate()
+        time = "3 pm"
+        locations = extractor.getLocations()
+        return jsonify(date=date, time=time, locations=locations)
+    
+    
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
