@@ -10,6 +10,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int CAMERA_REQUEST = 1888;
     public static final int THUMBNAIL_SIZE = 200;
     Bitmap current_image;
-    Uri imageUri;
+    static Uri imageUri;
     public static Toast transitionToast;
     ImageView i_view;
     Button takePhotoAgainButton;
@@ -111,12 +112,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void takePicture()
     {
         values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, "Picture taken");
         values.put(MediaStore.Images.Media.DESCRIPTION, "Picture taken from camera");
         imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Log.d("Image URI:", imageUri.toString());
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
         startActivityForResult(intent, CAMERA_REQUEST);
@@ -134,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             transitionToast = Toast.makeText(getApplicationContext(), "Parsing...", Toast.LENGTH_LONG);
             Intent intent = new Intent(MainActivity.this, ParserActivity.class);
+            intent.putExtra("imageUri", imageUri);
             transitionToast.show();
             startActivity(intent);
         }
