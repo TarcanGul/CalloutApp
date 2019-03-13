@@ -46,7 +46,16 @@ def sendParsingInformation():
         locations = extractor.getLocations()
         return jsonify(date=date, time=time, locations=locations)
     
-    
+@app.route("/debug", methods=['GET'])
+def printList():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    #This is where the file input will enter.
+    #if not request.json or not 'image' in request.json:
+        #   abort(400)
+    parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,'PandaFlyer.jpg')))
+    parsedList = parsedText.split()
+    return str(parsedList)
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)

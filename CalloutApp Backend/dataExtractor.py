@@ -1,36 +1,44 @@
 import os
 import re
-from googleplaces import GooglePlaces, types, lang
+#from googleplaces import GooglePlaces, types, lang
 
 API_KEY = 'AIzaSyAVGOibW9k5jOPiZL_zfR1PHCbkkqXo08s'
 
-google_places = GooglePlaces(API_KEY)
-monthAbbreviations = {'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'}
+#google_places = GooglePlaces(API_KEY)
+monthAbbreviations = {'jan', 'jan.', 'january', 'feb', 'feb.', 'february', 'mar', 'mar.', 'march',  
+'apr', 'apr.', 'april', 'may', 'jun', 'jun.', 'june', 'jul', 'jul.', 'july', 'aug', 'aug.', 'august', 
+'sep', 'sept', 'sep.', 'sept.', 'september', 'oct', 'oct.', 'october', 'nov', 'nov.', 'november', 'dec', 'dec.', 'december'}
+
+punctuations = {'.', ',', '!', '?', ':', '\'', '\"', ';'}
+
+date = ""
+time = ''
+locations = []
+titles = []
 
 class InfoExtractor:
-
-    date = ''
-    time = ''
-    locations = []
-    titles = []
-
+    
     def extractWords(self, list):
         global time
         global locations
         global date
         for i in range(0, len(list)):
             word = str(list[i])
-            #checking date
-            if re.match('[0-9]{1,2}/[0-9]{1,2}', word) is not None or re.match('[0-9]{1,2}\.[0-9]{1,2}', word) or re.match('[0-9]{1,2}\-[0-9]{1,2}', word):
-                if list[i+1] != 'am' and list[i+1] != 'pm' and list[i][-2:] != 'am'  and list[i][-2:] != 'pm': # check if i+1 exists
-                    date = word
-                    continue
+            
+            if date == "":
+                #checking date
+                if re.match('[0-9]{1,2}/[0-9]{1,2}', word) is not None or re.match('[0-9]{1,2}\.[0-9]{1,2}', word) or re.match('[0-9]{1,2}\-[0-9]{1,2}', word):
+                    if list[i+1] != 'am' and list[i+1] != 'pm' and list[i][-2:] != 'am'  and list[i][-2:] != 'pm': # check if i+1 exists
+                        date = word
+                        continue
 
-            if word[:3].lower() in monthAbbreviations:
-                if list[i+1] is not None:
-                    date = list[i] + " "
-                    date += list[i+1]
-                    continue
+                if word.lower() in monthAbbreviations:
+                    if list[i+1][0].isdigit():
+                        date = list[i] + " "
+                        if (list[i+1][-1] in punctuations):
+                            list[i+1] = list[i+1][:-1]
+                        date += list[i+1]
+                        continue
             #checking time
             if word == 'am' or word == 'pm':
                 if re.match('\d{1,2}\:\d{2}\-\d{1,2}\:\d{2}', list[i-1]) is not None:
@@ -85,6 +93,8 @@ class InfoExtractor:
             self.locations = ['aahan']
             #if(i < 6):
             #   self.titles.append(list[i])
+        #if date == "":
+        #    date = "not found"
     def getDate(self):
         return date
     def getTime(self):
