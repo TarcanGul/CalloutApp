@@ -15,11 +15,7 @@ import retrofit2.http.Part;
 
 public interface CalloutAPI
 {
-
-    @GET("output")
-    Call<Result> getResult();
-
     @Multipart
-    @POST("input")
-    Call<ResponseBody> sendImageToServer(@Part MultipartBody.Part image);
+    @POST("model")
+    Call<Result> sendImageToServer(@Part MultipartBody.Part image);
 }

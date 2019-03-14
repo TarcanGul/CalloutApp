@@ -85,6 +85,14 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+
+            }, 200);
+            return;
+        }
+
         i_view = (ImageView) findViewById(R.id.imageView);
         takePhotoAgainButton = (Button) findViewById(R.id.photoAgainButton);
         parseAndSendButton = (Button) findViewById(R.id.parseAndSendButton);

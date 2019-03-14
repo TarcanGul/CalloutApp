@@ -9,7 +9,7 @@ this is for not having two different clients from one device.*/
 
 public class Client {
 
-    private static final String BASE_URL = "http://10.186.1.114:5000/";
+    private static final String BASE_URL = "http://10.192.49.68:5000/";
     private static Client _client;
     private Retrofit retrofit;
 

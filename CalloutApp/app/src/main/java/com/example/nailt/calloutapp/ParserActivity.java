@@ -52,19 +52,35 @@ public class ParserActivity extends AppCompatActivity {
             Log.d("Image URI:", takenImage.toString());
             if(takenImage != null)
             {
-                    File file = new File(takenImage.getPath());
+                String filePathStr = null;
+                String[] path = {MediaStore.Images.Media.DATA};
+                Cursor c = getContentResolver().query(takenImage, path,
+                        null, null, null);
+                c.moveToFirst();
+                int columnIndex = c.getColumnIndex(path[0]);
+                filePathStr = c.getString(columnIndex);
+                    File file = new File(filePathStr);
                     RequestBody requestFile =
                             RequestBody.create(MediaType.parse("multipart/form-data"), file);
                     MultipartBody.Part part = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
-                    Call<ResponseBody> inputCall = Client.getClientInstance().getAPI().sendImageToServer(part);
-                    inputCall.enqueue(new Callback<ResponseBody>() {
+                    Call<Result> inputCall = Client.getClientInstance().getAPI().sendImageToServer(part);
+                    inputCall.enqueue(new Callback<Result>() {
+                        Result result;
                         @Override
-                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        public void onResponse(Call<Result> call, Response<Result> response) {
                             Log.d("Image input", "Image input successful");
+                            Log.d("JSON", "Success!");
+                            result = response.body();
+                            dateField.setText(result.getDate());
+                            timeField.setText(result.getTime());
+                            Log.d("JSON", response.body().toString());
+                            locationField.setAdapter(new ArrayAdapter<String>(getApplicationContext(),
+                                    R.layout.support_simple_spinner_dropdown_item,
+                                    result.getLocations()));
                         }
 
                         @Override
-                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        public void onFailure(Call<Result> call, Throwable t) {
                             Log.d("Image input", t.getMessage());
                         }
                     });
@@ -77,7 +93,7 @@ public class ParserActivity extends AppCompatActivity {
         }
     }
 
-    private class GetOutputThread implements Runnable
+    /*private class GetOutputThread implements Runnable
     {
         public void run()
         {
@@ -106,7 +122,7 @@ public class ParserActivity extends AppCompatActivity {
 
             });
         }
-    }
+    }*/
 
 
 
@@ -129,7 +145,7 @@ public class ParserActivity extends AppCompatActivity {
         {
             Log.d("Input Thread interruption", e.getMessage());
         }
-        Runnable outputRunnable = new GetOutputThread();
+        /*Runnable outputRunnable = new GetOutputThread();
         Thread outputGettingThread = new Thread(outputRunnable);
         outputGettingThread.start();
         try {
@@ -138,7 +154,7 @@ public class ParserActivity extends AppCompatActivity {
         catch(InterruptedException e)
         {
             Log.d("Input Thread interruption", e.getMessage());
-        }
+        }*/
     }
 
 }
