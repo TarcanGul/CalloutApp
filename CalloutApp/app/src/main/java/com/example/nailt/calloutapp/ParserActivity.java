@@ -1,5 +1,6 @@
 package com.example.nailt.calloutapp;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -10,7 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,7 +45,7 @@ public class ParserActivity extends AppCompatActivity {
     TextView dateField;
     TextView timeField;
     Spinner locationField;
-    //Spinner titleField;
+    EditText titleField;
     Gson gson = new Gson();
     private class SendInputThread implements Runnable
     {
@@ -93,38 +97,6 @@ public class ParserActivity extends AppCompatActivity {
         }
     }
 
-    /*private class GetOutputThread implements Runnable
-    {
-        public void run()
-        {
-            Call<Result> call = Client.getClientInstance().getAPI().getResult();
-            Log.d("JSON", "Request sent");
-            call.enqueue(new Callback<Result>() {
-                Result result;
-                @Override
-                public void onResponse(Call<Result> call, Response<Result> response) {
-                    Log.d("JSON", "Success!");
-                    result = response.body();
-                    dateField.setText(result.getDate());
-                    timeField.setText(result.getTime());
-                    Log.d("JSON", response.body().toString());
-                    locationField.setAdapter(new ArrayAdapter<String>(getApplicationContext(),
-                            R.layout.support_simple_spinner_dropdown_item,
-                            result.getLocations()));
-                    Toast.makeText(getApplicationContext(), "Connection Successful", Toast.LENGTH_LONG);
-                }
-
-                @Override
-                public void onFailure(Call<Result> call, Throwable t) {
-                    Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_SHORT);
-                    Log.d("JSON", t.getMessage());
-                }
-
-            });
-        }
-    }*/
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,11 +105,16 @@ public class ParserActivity extends AppCompatActivity {
         dateField = (TextView) findViewById(R.id.dateField);
         timeField = (TextView)  findViewById(R.id.timeField);
         locationField = (Spinner)  findViewById(R.id.locationField);
-        //titleField = (Spinner) findViewById(R.id.titleField);
+        titleField = (EditText) findViewById(R.id.titleField);
+        Button backButton = (Button) findViewById(R.id.backButton);
+        Button sendButton = (Button) findViewById(R.id.sendButton);
+
+        backButton.setOnClickListener(backButtonListener);
+        sendButton.setOnClickListener(sendButtonListener);
+
         Runnable inputRunnable = new SendInputThread();
         Thread inputSendingthread = new Thread(inputRunnable);
         inputSendingthread.start();
-
         try {
             inputSendingthread.join();
         }
@@ -145,16 +122,24 @@ public class ParserActivity extends AppCompatActivity {
         {
             Log.d("Input Thread interruption", e.getMessage());
         }
-        /*Runnable outputRunnable = new GetOutputThread();
-        Thread outputGettingThread = new Thread(outputRunnable);
-        outputGettingThread.start();
-        try {
-            outputGettingThread.join();
-        }
-        catch(InterruptedException e)
-        {
-            Log.d("Input Thread interruption", e.getMessage());
-        }*/
     }
+
+    View.OnClickListener backButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent goBackIntent = new Intent(getBaseContext(), MainActivity.class);
+            startActivity(goBackIntent);
+        }
+    };
+
+    View.OnClickListener sendButtonListener = new View.OnClickListener(){
+
+        @Override
+        public void onClick(View v)
+        {
+
+        }
+
+    };
 
 }
