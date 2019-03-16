@@ -67,14 +67,12 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.CAMERA,
 
             }, 200);
-            return;
         }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
 
             }, 200);
-            return;
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
@@ -82,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.INTERNET,
 
             }, 200);
-            return;
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -90,9 +87,14 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
 
             }, 200);
-            return;
         }
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.GET_ACCOUNTS,
+
+            }, 200);
+        }
         i_view = (ImageView) findViewById(R.id.imageView);
         takePhotoAgainButton = (Button) findViewById(R.id.photoAgainButton);
         parseAndSendButton = (Button) findViewById(R.id.parseAndSendButton);

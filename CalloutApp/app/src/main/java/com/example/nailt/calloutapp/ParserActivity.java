@@ -1,6 +1,8 @@
 package com.example.nailt.calloutapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -19,14 +21,37 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
+import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 import com.google.gson.Gson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.text.RuleBasedCollator;
+import java.util.Collections;
+import java.util.List;
+import com.google.gson.Gson.*;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -46,7 +71,12 @@ public class ParserActivity extends AppCompatActivity {
     TextView timeField;
     Spinner locationField;
     EditText titleField;
-    Gson gson = new Gson();
+    private static final JsonFactory JSON_FACTORY =  JacksonFactory.getDefaultInstance();
+    private static final String TOKENS_DIRECTORY_PATH = "tokens";
+    private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
+    private static final String CREDENTIALS_FILE_PATH = "./res/client_id.json";
+    GoogleAccountCredential credential;
+
     private class SendInputThread implements Runnable
     {
         public void run()
@@ -98,6 +128,7 @@ public class ParserActivity extends AppCompatActivity {
     }
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,15 +139,17 @@ public class ParserActivity extends AppCompatActivity {
         titleField = (EditText) findViewById(R.id.titleField);
         Button backButton = (Button) findViewById(R.id.backButton);
         Button sendButton = (Button) findViewById(R.id.sendButton);
-
-        backButton.setOnClickListener(backButtonListener);
+        sendButton.setEnabled(false);
         sendButton.setOnClickListener(sendButtonListener);
+        backButton.setOnClickListener(backButtonListener);
+
 
         Runnable inputRunnable = new SendInputThread();
         Thread inputSendingthread = new Thread(inputRunnable);
         inputSendingthread.start();
         try {
             inputSendingthread.join();
+            sendButton.setEnabled(true);
         }
         catch(InterruptedException e)
         {
@@ -127,7 +160,7 @@ public class ParserActivity extends AppCompatActivity {
     View.OnClickListener backButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent goBackIntent = new Intent(getBaseContext(), MainActivity.class);
+            Intent goBackIntent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(goBackIntent);
         }
     };
@@ -137,9 +170,26 @@ public class ParserActivity extends AppCompatActivity {
         @Override
         public void onClick(View v)
         {
-
+            Log.d("Calendar:","Sending started");
+            //Send request to API
         }
 
     };
+
+    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
+        // Load client secrets.
+        InputStream in = ParserActivity.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+
+        // Build flow and trigger user authorization request.
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                .setAccessType("online")
+                .build();
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(5000).build();
+        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("nailtarcan@gmail.com");
+        //return flow.loadCredential("nailtarcan@gmail.com");
+    }
 
 }
