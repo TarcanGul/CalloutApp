@@ -26,6 +26,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -81,13 +82,11 @@ public class ParserActivity extends AppCompatActivity {
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "./res/client_id.json";
-    private static final String Server_ClientID = "317065341451-b8ppejgohr73aq4iabmja7kjfjdl3akl.apps.googleusercontent.com";
     GoogleAccountCredential credential;
-    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestServerAuthCode(Server_ClientID)
-            .requestEmail()
-            .build();
+    GoogleSignInOptions gso;
+
     GoogleSignInClient mGoogleSignInClient;
+    private static final Scope CALENDAR_AUTH_TOKEN = new Scope("https://www.googleapis.com/auth/calendar.events");
     private static final int RC_SIGN_IN = 9001;
     private class SendInputThread implements Runnable
     {
@@ -143,6 +142,11 @@ public class ParserActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getApplicationContext().getResources().getString(R.string.server_client_id))
+                .requestEmail()
+                .requestScopes(CALENDAR_AUTH_TOKEN)
+                .build();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_parser);
         dateField = (TextView) findViewById(R.id.dateField);
@@ -202,18 +206,19 @@ public class ParserActivity extends AppCompatActivity {
             Log.d("Request", "Request got in.");
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleSignInResult(task);
+
         }
     }
 
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-
+            //account = account.requestExtraScopes(CALENDAR_AUTH_TOKEN);
             // Signed in successfully, show authenticated UI.
             Log.d("Google Auth", "Auth successful!");
             if(account != null)Log.d("Google Auth", account.getEmail());
             //Send client details to server
-            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getServerAuthCode());
+            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getIdToken());
             calendarCall.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -225,6 +230,8 @@ public class ParserActivity extends AppCompatActivity {
                     Log.d("Calendar-Server", t.getMessage());
                 }
             });
+
+
 
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.

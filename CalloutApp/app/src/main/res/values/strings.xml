@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">CalloutApp</string>
-    <string name="server_client_id">659045646039-1lmnhisae5jr6chf4dv2399bl9gu24k8.apps.googleusercontent.com</string>
+    <string name="server_client_id">317065341451-05au2r4ptnbhmd5p8me67u50phh32ns2.apps.googleusercontent.com</string>
+    <string name="server_client_secret">qrGfhCIzrJM6uFUlUuYwmHjS</string>
 </resources>

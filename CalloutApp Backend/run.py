@@ -1,4 +1,5 @@
 from __future__ import print_function
+import sys
 from flask import Flask
 from flask import jsonify, request, abort, url_for, redirect
 from dataExtractor import InfoExtractor
@@ -93,6 +94,7 @@ def addEventToCalendar(token):
         userid = idinfo['sub']
     except ValueError:
         # Invalid token
+        print("Value error", file=sys.stderr)
         return "Value error"
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
@@ -112,7 +114,9 @@ def addEventToCalendar(token):
     events = events_result.get('items', [])
 
     if not events:
+        print("No upcoming event", file=sys.stderr)
         return 'No upcoming events found.'
+    print(events, file=sys.stderr)
     return events
 
 

@@ -3,9 +3,9 @@
 git pull origin master
 git add *
 if [ -z "$1" ]; then
-	git commit -m "$USER commited"
+	git commit -m "Commited"
 else
-	git commit -m $1
+	git commit -m $*
 fi
 
 git push origin master
