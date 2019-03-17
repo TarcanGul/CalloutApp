@@ -1,7 +1,6 @@
 from __future__ import print_function
 from flask import Flask
 from flask import jsonify, request, abort, url_for, redirect
-app = Flask(__name__)
 from dataExtractor import InfoExtractor
 from PIL import Image
 import pytesseract 
@@ -13,9 +12,13 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
+CLIENT_ID = '659045646039-5l58ktdmt7n5ca6879pec7jmdibp9of2.apps.googleusercontent.com'
+app = Flask(__name__)
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 
 #This has to be a global path but this line makes it compatible with other server hosts.
 UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "\\upload"
@@ -65,11 +68,32 @@ def printList():
     parsedList = parsedText.split()
     return str(parsedList)
 
-
-def setupCalendar():
+@app.route("/calendar/<token>", methods=['POST'])
+def addEventToCalendar(token):
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
+    try:
+        # Specify the CLIENT_ID of the app that accesses the backend:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+
+        # Or, if multiple clients access the backend server:
+        # idinfo = id_token.verify_oauth2_token(token, requests.Request())
+        # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
+        #     raise ValueError('Could not verify audience.')
+    
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+           raise ValueError('Wrong issuer.')
+
+        #If auth request is from a G Suite domain:
+        # if idinfo['hd'] != GSUITE_DOMAIN_NAME:
+        #     raise ValueError('Wrong hosted domain.')
+
+        # ID token is valid. Get the user's Google Account ID from the decoded token.
+        userid = idinfo['sub']
+    except ValueError:
+        # Invalid token
+        return "Value error"
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -77,33 +101,19 @@ def setupCalendar():
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server()
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
 
     service = build('calendar', 'v3', credentials=creds)
 
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
     events_result = service.events().list(calendarId='primary', timeMin=now,
                                         maxResults=10, singleEvents=True,
                                         orderBy='startTime').execute()
     events = events_result.get('items', [])
 
     if not events:
-        print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+        return 'No upcoming events found.'
+    return events
 
 
 if __name__ == "__main__":

@@ -21,6 +21,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -75,8 +81,14 @@ public class ParserActivity extends AppCompatActivity {
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "./res/client_id.json";
+    private static final String Server_ClientID = "317065341451-b8ppejgohr73aq4iabmja7kjfjdl3akl.apps.googleusercontent.com";
     GoogleAccountCredential credential;
-
+    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestServerAuthCode(Server_ClientID)
+            .requestEmail()
+            .build();
+    GoogleSignInClient mGoogleSignInClient;
+    private static final int RC_SIGN_IN = 9001;
     private class SendInputThread implements Runnable
     {
         public void run()
@@ -150,6 +162,7 @@ public class ParserActivity extends AppCompatActivity {
         try {
             inputSendingthread.join();
             sendButton.setEnabled(true);
+
         }
         catch(InterruptedException e)
         {
@@ -172,24 +185,52 @@ public class ParserActivity extends AppCompatActivity {
         {
             Log.d("Calendar:","Sending started");
             //Send request to API
+            mGoogleSignInClient = GoogleSignIn.getClient(getApplicationContext(), gso);
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
         }
 
     };
 
-    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
-        // Load client secrets.
-        InputStream in = ParserActivity.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Log.d("Request", "Request got in.");
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
 
-        // Build flow and trigger user authorization request.
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
-                .setAccessType("online")
-                .build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(5000).build();
-        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("nailtarcan@gmail.com");
-        //return flow.loadCredential("nailtarcan@gmail.com");
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+
+            // Signed in successfully, show authenticated UI.
+            Log.d("Google Auth", "Auth successful!");
+            if(account != null)Log.d("Google Auth", account.getEmail());
+            //Send client details to server
+            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getServerAuthCode());
+            calendarCall.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    Log.d("Calendar-Server", "Calendar Connection Successful");
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    Log.d("Calendar-Server", t.getMessage());
+                }
+            });
+
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w("Google Authentication", "signInResult:failed code=" + e.getStatusCode());
+        }
     }
 
 }
