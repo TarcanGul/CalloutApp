@@ -16,7 +16,8 @@ from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
-CLIENT_ID = '659045646039-5l58ktdmt7n5ca6879pec7jmdibp9of2.apps.googleusercontent.com'
+#CLIENT_ID = '659045646039-5l58ktdmt7n5ca6879pec7jmdibp9of2.apps.googleusercontent.com'
+CLIENT_ID = '317065341451-05au2r4ptnbhmd5p8me67u50phh32ns2.apps.googleusercontent.com'
 app = Flask(__name__)
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.events']
@@ -38,7 +39,7 @@ def getImageInput():
     #Images will appear in 'upload' folder
     #We can delete the file after we are done: to be implemented
     image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
+    print("Image saved!", file=sys.stderr)
     #This method will return JSON
     return sendParsingInformation(filename)
 
@@ -55,7 +56,7 @@ def sendParsingInformation(image):
         date = extractor.getDate()
         time = "3 pm"
         locations = extractor.getLocations()
-
+        print("Before jsonify", file=sys.stderr)
         return jsonify(date=date, time=time, locations=locations)
 
     
@@ -76,10 +77,11 @@ def addEventToCalendar(token):
     """
     try:
         # Specify the CLIENT_ID of the app that accesses the backend:
+        
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
 
         # Or, if multiple clients access the backend server:
-        # idinfo = id_token.verify_oauth2_token(token, requests.Request())
+        #idinfo = id_token.verify_oauth2_token(token, requests.Request())
         # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
         #     raise ValueError('Could not verify audience.')
     
@@ -87,14 +89,15 @@ def addEventToCalendar(token):
            raise ValueError('Wrong issuer.')
 
         #If auth request is from a G Suite domain:
-        # if idinfo['hd'] != GSUITE_DOMAIN_NAME:
-        #     raise ValueError('Wrong hosted domain.')
+        #if idinfo['hd'] != GSUITE_DOMAIN_NAME:
+        #    raise ValueError('Wrong hosted domain.')
 
         # ID token is valid. Get the user's Google Account ID from the decoded token.
         userid = idinfo['sub']
-    except ValueError:
+        print("userid: " + userid, file=sys.stderr)
+    except ValueError as e:
         # Invalid token
-        print("Value error", file=sys.stderr)
+        print(str(e), file=sys.stderr)
         return "Value error"
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
@@ -104,6 +107,9 @@ def addEventToCalendar(token):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
 
+    print("Adding", file=sys.stderr)
+    date = request.form['date']
+    print("Date: " + date, file=sys.stderr)
     service = build('calendar', 'v3', credentials=creds)
 
     # Call the Calendar API

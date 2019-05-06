@@ -192,6 +192,8 @@ public class ParserActivity extends AppCompatActivity {
             mGoogleSignInClient = GoogleSignIn.getClient(getApplicationContext(), gso);
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
             startActivityForResult(signInIntent, RC_SIGN_IN);
+            Log.d("Calendar Sign In:","Successful");
+
         }
 
     };
@@ -218,7 +220,7 @@ public class ParserActivity extends AppCompatActivity {
             Log.d("Google Auth", "Auth successful!");
             if(account != null)Log.d("Google Auth", account.getEmail());
             //Send client details to server
-            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getIdToken());
+            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getIdToken(), dateField.getText().toString(), timeField.getText().toString(), locationField.getSelectedItem().toString());
             calendarCall.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -236,7 +238,8 @@ public class ParserActivity extends AppCompatActivity {
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
-            Log.w("Google Authentication", "signInResult:failed code=" + e.getStatusCode());
+            Log.d("Google Authentication", "signInResult:failed code=" + e.getStatusCode());
+            Log.d("Google Authentication", e.getMessage());
         }
     }
 

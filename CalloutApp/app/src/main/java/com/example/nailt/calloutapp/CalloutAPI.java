@@ -6,6 +6,7 @@ import okhttp3.MultipartBody;
 import retrofit2.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
@@ -20,6 +21,8 @@ public interface CalloutAPI
     @POST("model")
     Call<Result> sendImageToServer(@Part MultipartBody.Part image);
 
+    @FormUrlEncoded
     @POST("calendar/{token}")
-    Call<ResponseBody> sendToGoogleCalendar(@Path("token") String idToken);
+    Call<ResponseBody> sendToGoogleCalendar(@Path("token") String idToken, @Field("date") String date, @Field("time") String time,
+                                            @Field("location") String location);
 }
