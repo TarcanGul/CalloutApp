@@ -11,13 +11,18 @@ import datetime
 import pickle
 import os.path
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
+from google.oauth2.credentials import Credentials
 from google.auth.transport import requests
+import json
+import httplib2
+from google_auth_oauthlib.flow import Flow
+from google.auth.transport.requests import Request
+from oauth2client import client
 
-#CLIENT_ID = '659045646039-5l58ktdmt7n5ca6879pec7jmdibp9of2.apps.googleusercontent.com'
-CLIENT_ID = '317065341451-05au2r4ptnbhmd5p8me67u50phh32ns2.apps.googleusercontent.com'
+CLIENT_SECRET_FILE = 'client_secret.json'
+
 app = Flask(__name__)
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.events']
@@ -53,7 +58,7 @@ def sendParsingInformation(image):
         extractor = InfoExtractor()
         extractor.extractWords(parsedList)
         
-        date = extractor.getDate()
+        date = "May 7"
         time = "3 pm"
         locations = extractor.getLocations()
         print("Before jsonify", file=sys.stderr)
@@ -63,67 +68,111 @@ def sendParsingInformation(image):
 @app.route("/debug", methods=['GET'])
 def printList():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    #This is where the file input will enter.
-    #if not request.json or not 'image' in request.json:
-        #   abort(400)
     parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,'PandaFlyer.jpg')))
     parsedList = parsedText.split()
     return str(parsedList)
 
-@app.route("/calendar/<token>", methods=['POST'])
-def addEventToCalendar(token):
-    """Shows basic usage of the Google Calendar API.
-    Prints the start and name of the next 10 events on the user's calendar.
-    """
-    try:
-        # Specify the CLIENT_ID of the app that accesses the backend:
+
+@app.route("/calendar", methods=['GET', 'POST'])
+def addEventToCalendar():
+    if request.method == 'POST':
+        """
+        We are taking the id token to identify if we already have the credentials for the user. 
+        """
+        token = request.form['token']
+        auth_code = request.form['authcode']
         
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+        try:
+            # Specify the CLIENT_ID of the app that accesses the backend 
+            with open(CLIENT_SECRET_FILE, 'r') as f:
+                client_dict = json.load(f)
 
-        # Or, if multiple clients access the backend server:
-        #idinfo = id_token.verify_oauth2_token(token, requests.Request())
-        # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
-        #     raise ValueError('Could not verify audience.')
-    
-        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-           raise ValueError('Wrong issuer.')
+            client_id = client_dict["web"]["client_id"]
+            print("Client ID:" + client_id, file=sys.stderr)
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
+        
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
 
-        #If auth request is from a G Suite domain:
-        #if idinfo['hd'] != GSUITE_DOMAIN_NAME:
-        #    raise ValueError('Wrong hosted domain.')
+            # ID token is valid. Get the user's Google Account ID from the decoded token.
+            userid = idinfo['sub']
+            user_email = idinfo['email']
+            print("userid: " + userid, file=sys.stderr)
+            print("email: " + user_email, file=sys.stderr)
+        except ValueError as e:
+            # Invalid token
+            print("Auth error" + str(e), file=sys.stderr)
+            return "Value error"
+         
 
-        # ID token is valid. Get the user's Google Account ID from the decoded token.
-        userid = idinfo['sub']
-        print("userid: " + userid, file=sys.stderr)
-    except ValueError as e:
-        # Invalid token
-        print(str(e), file=sys.stderr)
-        return "Value error"
-    creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
+        #Starting the flow. 
+        flow = Flow.from_client_secrets_file(
+            CLIENT_SECRET_FILE,
+            scopes=SCOPES,
+            redirect_uri='urn:ietf:wg:oauth:2.0:oob')
 
-    print("Adding", file=sys.stderr)
-    date = request.form['date']
-    print("Date: " + date, file=sys.stderr)
-    service = build('calendar', 'v3', credentials=creds)
+        #Fetching the code the client sends to us. 
+        flow.fetch_token(code=auth_code)
 
-    # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    events_result = service.events().list(calendarId='primary', timeMin=now,
-                                        maxResults=10, singleEvents=True,
-                                        orderBy='startTime').execute()
-    events = events_result.get('items', [])
+        creds = None
+                
+        if os.path.exists('token.pickle'):
+            with open('token.pickle', 'rb') as token:
+                creds = pickle.load(token)
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                creds = flow.credentials
+            # Save the credentials for the next run
+            with open('token.pickle', 'wb') as token:
+                pickle.dump(creds, token)
+        
+        
+        print("Adding new event", file=sys.stderr)
+        date = request.form['date']
+        time = request.form['time']
+        location = request.form['location']
+        print("Date: " + date, file=sys.stderr)
+        print("Time: " + time, file=sys.stderr)
+        print("Location: " + location, file=sys.stderr)
 
-    if not events:
-        print("No upcoming event", file=sys.stderr)
-        return 'No upcoming events found.'
-    print(events, file=sys.stderr)
-    return events
+        # Call the Calendar API
+        datetime_request = str(datetime.datetime(year=2019, month=5, day=10, hour=9, minute=0).isoformat())
+        datetime_end_request = str(datetime.datetime(year=2019, month=5, day=10, hour=11, minute=0).isoformat())
+        
+        insert_body = {
+            "summary" : "Tarcan kutlama 4",
+            "start" : {
+                "dateTime" : datetime_request,
+                "timeZone" : "America/Indiana/Indianapolis",
+                
+            },
+            "end" : {
+                "dateTime" : datetime_end_request,
+                "timeZone" : "America/Indiana/Indianapolis",
+            },
+            "location" : "Amasya"
+        }
+        service = build('calendar', 'v3', credentials=creds)
+        
+        now = datetime.datetime.utcnow().isoformat() + "Z"
+        print("Insert body:" + str(json.dumps(insert_body)), file=sys.stderr)
+        events_add = service.events().insert(calendarId="primary", body=json.loads(str(json.dumps(insert_body)))).execute()
+        print("Events add status: " + str(events_add), file=sys.stderr)
+        events_result = service.events().list(calendarId="primary", timeMin=now,
+                                            maxResults=10, singleEvents=True,
+                                            orderBy='startTime').execute()
+        events = events_result.get('items', [])
+
+        if not events:
+            print("No upcoming event", file=sys.stderr)
+            return 'No upcoming events found.'
+        print("Events: " + str(events), file=sys.stderr)
+        print("Event added!", file=sys.stderr)
+        return jsonify(events)
+    else:
+        return "This is a get request."
 
 
 if __name__ == "__main__":

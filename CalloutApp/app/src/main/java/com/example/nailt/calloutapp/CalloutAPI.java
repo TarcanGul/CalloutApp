@@ -22,7 +22,7 @@ public interface CalloutAPI
     Call<Result> sendImageToServer(@Part MultipartBody.Part image);
 
     @FormUrlEncoded
-    @POST("calendar/{token}")
-    Call<ResponseBody> sendToGoogleCalendar(@Path("token") String idToken, @Field("date") String date, @Field("time") String time,
-                                            @Field("location") String location);
+    @POST("calendar")
+    Call<ResponseBody> sendToGoogleCalendar(@Field("token") String idToken, @Field("authcode") String auth_code, @Field("date") String date, @Field("time") String time,
+                                           @Field("location") String location);
 }
