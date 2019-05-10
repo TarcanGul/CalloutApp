@@ -6,6 +6,7 @@ from dataExtractor import InfoExtractor
 from PIL import Image
 import pytesseract 
 import os
+from dateTimeFilter import turnToDateTime
 from werkzeug.utils import secure_filename
 import datetime
 import pickle
@@ -138,7 +139,7 @@ def addEventToCalendar():
         print("Location: " + location, file=sys.stderr)
 
         # Call the Calendar API
-        datetime_request = str(datetime.datetime(year=2019, month=5, day=10, hour=9, minute=0).isoformat())
+        datetime_request = turnToDateTime(date, time)
         datetime_end_request = str(datetime.datetime(year=2019, month=5, day=10, hour=11, minute=0).isoformat())
         
         insert_body = {
