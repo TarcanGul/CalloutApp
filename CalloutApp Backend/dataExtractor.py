@@ -5,9 +5,11 @@ import re
 API_KEY = 'AIzaSyAVGOibW9k5jOPiZL_zfR1PHCbkkqXo08s'
 
 #google_places = GooglePlaces(API_KEY)
-monthAbbreviations = {'jan', 'jan.', 'january', 'feb', 'feb.', 'february', 'mar', 'mar.', 'march',  
-'apr', 'apr.', 'april', 'may', 'jun', 'jun.', 'june', 'jul', 'jul.', 'july', 'aug', 'aug.', 'august', 
-'sep', 'sept', 'sep.', 'sept.', 'september', 'oct', 'oct.', 'october', 'nov', 'nov.', 'november', 'dec', 'dec.', 'december'}
+#The two None's is for aligning the months so that every 3 entries is a different month. 
+#The way we find the month is dividing the index by 3 and adding 1. 
+monthAbbreviations = ['jan', 'jan.', 'january', 'feb', 'feb.', 'february', 'mar', 'mar.', 'march',  
+'apr', 'apr.', 'april', 'may',None, None, 'jun', 'jun.', 'june', 'jul', 'jul.', 'july', 'aug', 'aug.', 'august', 
+'sep', 'sept', 'sep.', 'sept.', 'september', 'oct', 'oct.', 'october', 'nov', 'nov.', 'november', 'dec', 'dec.', 'december']
 
 punctuations = {'.', ',', '!', '?', ':', '\'', '\"', ';'}
 
