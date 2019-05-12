@@ -1,5 +1,11 @@
 import datetime
-from dataExtractor import monthAbbreviations
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'utils'))
+from utils.dataExtractor import monthAbbreviations
+__author__ = "Tarcan Gul"
+__maintainer__ = "Tarcan Gul"
+__email__ = "tgul@purdue.edu"
+__status__ = "Development"
 
 def __findMonthNumber(month_string):
     first_three_letters = month_string[0:3]
@@ -126,7 +132,7 @@ def convertDate(date_in_string):
 
 def convertTime(time_string):
   #second will be always zero
-  time_string = time_string.strip()
+  time_string = time_string.strip().lower()
   time_words = ['am', 'pm']
   '''
   Possible formats:

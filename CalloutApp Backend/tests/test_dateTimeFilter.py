@@ -1,7 +1,8 @@
 import unittest
 import sys
-sys.path.append('..')
-from dateTimeFilter import convertDate, convertTime, turnToDateTime
+import os
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'utils'))
+from utils.dateTimeFilter import convertDate, convertTime, turnToDateTime
 
 class TestConvertDateTime(unittest.TestCase):
   def test_date_regular(self): 

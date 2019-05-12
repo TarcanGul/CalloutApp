@@ -53,7 +53,7 @@ public class ParserActivity extends AppCompatActivity {
     EditText timeEndField;
     Spinner locationField;
     EditText titleField;
-    ProgressBar spinner;
+    LinearLayout spinner;
     LinearLayout parserScreen;
     Button sendButton;
     GoogleAccountCredential credential;
@@ -62,6 +62,7 @@ public class ParserActivity extends AppCompatActivity {
     GoogleSignInClient mGoogleSignInClient;
     private static final Scope CALENDAR_AUTH_TOKEN = new Scope("https://www.googleapis.com/auth/calendar.events");
     private static final int RC_SIGN_IN = 9001;
+    AlertDialog.Builder builder;
 
     private class SendInputTask extends AsyncTask<Void, String, Integer>
     {
@@ -96,38 +97,53 @@ public class ParserActivity extends AppCompatActivity {
                     Result result;
                     @Override
                     public void onResponse(Call<Result> call, Response<Result> response) {
-                        Log.d("Image input", "Image input successful");
-                        Log.d("JSON", "Success!");
-                        if(transitionToast != null) transitionToast.cancel();
-                        transitionToast = Toast.makeText(getApplicationContext(), "Parsing successful!", Toast.LENGTH_LONG);
-                        transitionToast.show();
-                        spinner.setVisibility(View.GONE);
-                        parserScreen.setVisibility(View.VISIBLE);
-                        sendButton.setEnabled(true);
                         result = response.body();
-                        dateField.setText(result.getDate());
-                        timeField.setText(result.getTime());
-                        Log.d("JSON", response.body().toString());
-                        locationField.setAdapter(new ArrayAdapter<String>(getApplicationContext(),
-                                R.layout.support_simple_spinner_dropdown_item,
-                                result.getLocations()));
+                        if(result.isEmpty())
+                        {
+                            spinner.setVisibility(View.GONE);
+                            transitionToast.cancel();
+                            Log.d("Result", "Is empty!");
+                            builder.setMessage("Sorry, but it seems like the picture you have taken cannot be parsed.");
+                            builder.setPositiveButton("Try again", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    Intent goBackIntent = new Intent(getApplicationContext(), MainActivity.class);
+                                    startActivity(goBackIntent);
+                                }
+                            });
+// Create the AlertDialog
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
+                        }
+                        else{
+                            Log.d("Result", "Image input successful");
+                            Log.d("JSON", "Success!");
+                            if(transitionToast != null) transitionToast.cancel();
+                            transitionToast = Toast.makeText(getApplicationContext(), "Parsing successful!", Toast.LENGTH_LONG);
+                            transitionToast.show();
+                            spinner.setVisibility(View.GONE);
+                            parserScreen.setVisibility(View.VISIBLE);
+                            sendButton.setEnabled(true);
+                            dateField.setText(result.getDate());
+                            timeField.setText(result.getTime());
+                            timeEndField.setText(result.getEndTime());
+                            Log.d("JSON", response.body().toString());
+                            locationField.setAdapter(new ArrayAdapter<String>(getApplicationContext(),
+                                    R.layout.support_simple_spinner_dropdown_item,
+                                    result.getLocations()));
+                        }
+
                     }
 
                     @Override
                     public void onFailure(Call<Result> call, Throwable t) {
                         spinner.setVisibility(View.GONE);
                         Log.d("Image input", t.getMessage());
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ParserActivity.this);
 // Add the buttons
                         builder.setMessage("Error: " + t.getMessage());
-                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        builder.setPositiveButton("Try again", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                // User clicked OK button
-                            }
-                        });
-                        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // User cancelled the dialog
+                                Intent goBackIntent = new Intent(getApplicationContext(), MainActivity.class);
+                                startActivity(goBackIntent);
                             }
                         });
 // Create the AlertDialog
@@ -144,9 +160,6 @@ public class ParserActivity extends AppCompatActivity {
             return 0;
         }
 
-        @Override
-        protected void onPostExecute(Integer result) {
-        }
     }
 
 
@@ -160,24 +173,27 @@ public class ParserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_parser);
+
         dateField = (EditText) findViewById(R.id.dateField);
         timeField = (EditText)  findViewById(R.id.timeField);
         timeEndField = (EditText) findViewById(R.id.timeEndField);
         locationField = (Spinner)  findViewById(R.id.locationField);
         titleField = (EditText) findViewById(R.id.titleField);
 
-        spinner = (ProgressBar)findViewById(R.id.progressBar1);
+        spinner = (LinearLayout) findViewById(R.id.progressBar1);
         parserScreen = (LinearLayout) findViewById(R.id.parserScreen);
         Button backButton = (Button) findViewById(R.id.backButton);
         sendButton = (Button) findViewById(R.id.sendButton);
 
         sendButton.setOnClickListener(sendButtonListener);
         backButton.setOnClickListener(backButtonListener);
+        builder = new AlertDialog.Builder(this);
 
 
 
         //Runnable inputRunnable = new SendInputThread();
         //Thread inputSendingthread = new Thread(inputRunnable);
+
         new SendInputTask().execute();
     }
 

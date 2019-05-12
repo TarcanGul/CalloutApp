@@ -1,3 +1,4 @@
 *.json
 *.jpg
 __pycache__/
+.vs/

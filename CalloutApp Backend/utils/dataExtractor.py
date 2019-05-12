@@ -16,16 +16,19 @@ cursor = db.cursor()
 
 date = ""
 time = ''
+end_time = ''
 locations = []
-
+start_time_found = False
+date_found = False
 class InfoExtractor:
     
     def extractWords(self, list):
         global time
         global locations
         global date
+        global end_time
         for i in range(0, len(list)):
-            word = str(list[i])
+            word = str(list[i]).lower()
             
             if date == "":
                 #checking date
@@ -44,46 +47,53 @@ class InfoExtractor:
             #checking time
             if word == 'am' or word == 'pm':
                 if re.match('\d{1,2}\:\d{2}\-\d{1,2}\:\d{2}', list[i-1]) is not None:
-                    time = str(list[i-1][0:list[i-1].index('-')]) + word
+                    time = str(list[i-1][0:list[i-1].index('-')]) + " " + word
+                    end_time = list[i-1][list[i-1].index('-') + 1] + " " + word
                     continue
                 elif re.match('\d{1,2}\-\d{1,2}', list[i-1]) is not None:
-                    time = str(list[i-1][0:list[i-1].index('-')]) + word
+                    time = str(list[i-1][0:list[i-1].index('-')]) + " " + word
+                    end_time = list[i-1][list[i-1].index('-') + 1] + " " + word
                     continue
                 elif re.match('\d{1,2}\:\d{2}', list[i-1]) is not None:
+                    print(list[i-1], file=sys.stderr)
                     if i > 2 and list[i-2] == '-':
-                        time = str(list[i-3]) + word
+                        end_time = str(list[i-1]) + " " + word
                     else:
-                        time = str(list[i-1]) + word
+                        time = str(list[i-1]) + " " + word
                     continue
                 elif re.match('\d{1,2}', list[i-1]) is not None:
                     if i > 2 and list[i-2] == '-':
-                        time = str(list[i-3]) + word
+                        end_time = str(list[i-3]) + " " + word
                     else:
-                        time = str(list[i-1]) + word
+                        time = str(list[i-1]) + " " + word
                     continue
 
             elif word[-2:] == 'am' or word[-2:] == 'pm':
                 extracted_time = word[:-2]
                 if re.match('\d{1,2}\:\d{2}\-\d{1,2}\:\d{2}', extracted_time) is not None:
-                    time = extracted_time + word[-2:]
+                    time = extracted_time[0:extracted_time.index('-')] + word[-2:]
+                    end_time = extracted_time[extracted_time.index('-') + 1] + word[-2:0]
                     continue
                 elif re.match('\d{1,2}\-\d{1,2}', extracted_time) is not None:
-                    time = extracted_time + word[-2:]
+                    if i > 2 and list[i-2] == '-':
+                        end_time = extracted_time + word[-2:]
+                    else:
+                        time = extracted_time + word[-2:]
                     continue
                 elif re.match('\d{1,2}\:\d{2}', extracted_time) is not None:
                     if i > 1 and list[i-1] == '-':
-                        time = str(list[i-2]) + word[-2:]
+                        end_time = str(list[i-2]) + word[-2:]
                     else:
                         time = extracted_time + word[-2:]
                     continue
                 elif re.match('\d{1,2}', extracted_time) is not None:
                     if i > 1 and list[i-1] == '-':
-                        time = str(list[i-2]) + word[-2:]
+                        end_time = str(list[i-2]) + word[-2:]
                     else:
                         time = extracted_time + word[-2:]
                     continue
 
-            if any(ch.isdigit() for ch in list[i]) or len(list[i]) == 1 or any(ch in punctuations for ch in list[i]):
+            if any(ch.isdigit() for ch in list[i]) or len(list[i]) == 1 or any(ch in punctuations for ch in list[i]) or list[i] in ['am', 'pm']:
                 continue
             
             #checking location using our locations database in mysql. 
@@ -100,5 +110,7 @@ class InfoExtractor:
         return date
     def getTime(self):
         return time
+    def getEndTime(self):
+        return end_time
     def getLocations(self):
         return locations

@@ -1,16 +1,13 @@
 from __future__ import print_function
 import sys
+import os
 from flask import Flask
 from flask import jsonify, request, abort, url_for, redirect
-from dataExtractor import InfoExtractor
 from PIL import Image
 import pytesseract 
-import os
-from dateTimeFilter import turnToDateTime
 from werkzeug.utils import secure_filename
 import datetime
 import pickle
-import os.path
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
@@ -21,6 +18,13 @@ import httplib2
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from oauth2client import client
+
+sys.path.append(os.path.join(sys.path[0],'utils'))
+
+
+from utils.dateTimeFilter import turnToDateTime
+from utils.dataExtractor import InfoExtractor
+
 
 CLIENT_SECRET_FILE = 'client_secret.json'
 
@@ -51,28 +55,28 @@ def getImageInput():
 
 def sendParsingInformation(image):
         
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-         #We can put image instead of 'PandaFlyer'
-        parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,'PandaFlyer.jpg')))
+        dir_path = app.config['UPLOAD_FOLDER']
+         #Putting the image.
+        parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,image)))
+        if not parsedText:
+            print("Parsed Text is empty.", file=sys.stderr)
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
+            return jsonify(date=None, time=None, end_time=None, locations=[])
         parsedList = parsedText.split()
+        #This image doesn't have any text. 
+        
         #Creating extractor object
         extractor = InfoExtractor()
         extractor.extractWords(parsedList)
         
         date = extractor.getDate()
         time = extractor.getTime()
+        end_time = extractor.getEndTime()
+        print("End time:" + str(end_time), file=sys.stderr)
         locations = extractor.getLocations()
         print("Before jsonify", file=sys.stderr)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
-        return jsonify(date=date, time=time, locations=locations)
-
-    
-@app.route("/debug", methods=['GET'])
-def printList():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,'PandaFlyer.jpg')))
-    parsedList = parsedText.split()
-    return str(parsedList)
+        return jsonify(date=date, time=time, end_time=end_time, locations=locations)
 
 
 @app.route("/calendar", methods=['GET', 'POST'])
