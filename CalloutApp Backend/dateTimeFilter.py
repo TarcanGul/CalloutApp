@@ -126,6 +126,7 @@ def convertDate(date_in_string):
 
 def convertTime(time_string):
   #second will be always zero
+  time_string = time_string.strip()
   time_words = ['am', 'pm']
   '''
   Possible formats:

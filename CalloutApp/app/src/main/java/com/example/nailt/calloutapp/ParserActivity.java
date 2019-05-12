@@ -48,8 +48,9 @@ import retrofit2.Response;
 
 public class ParserActivity extends AppCompatActivity {
 
-    TextView dateField;
-    TextView timeField;
+    EditText dateField;
+    EditText timeField;
+    EditText timeEndField;
     Spinner locationField;
     EditText titleField;
     ProgressBar spinner;
@@ -159,8 +160,9 @@ public class ParserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_parser);
-        dateField = (TextView) findViewById(R.id.dateField);
-        timeField = (TextView)  findViewById(R.id.timeField);
+        dateField = (EditText) findViewById(R.id.dateField);
+        timeField = (EditText)  findViewById(R.id.timeField);
+        timeEndField = (EditText) findViewById(R.id.timeEndField);
         locationField = (Spinner)  findViewById(R.id.locationField);
         titleField = (EditText) findViewById(R.id.titleField);
 
@@ -224,9 +226,12 @@ public class ParserActivity extends AppCompatActivity {
             Log.d("Google Auth", "Auth successful!");
             if(account != null)Log.d("Google Auth", account.getEmail());
             String authCode = account.getServerAuthCode();
-
+            String title = titleField.getText().toString();
+            if(title == null)
+                title = "Untitled event";
             //Send client details to server
-            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getIdToken(), authCode, dateField.getText().toString(), timeField.getText().toString(), locationField.getSelectedItem().toString());
+            Call<ResponseBody> calendarCall = Client.getClientInstance().getAPI().sendToGoogleCalendar(account.getIdToken(), authCode, dateField.getText().toString()
+                    , timeField.getText().toString(), timeEndField.getText().toString(), locationField.getSelectedItem().toString(), title);
             calendarCall.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {

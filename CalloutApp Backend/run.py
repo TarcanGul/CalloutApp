@@ -59,8 +59,8 @@ def sendParsingInformation(image):
         extractor = InfoExtractor()
         extractor.extractWords(parsedList)
         
-        date = "May 7"
-        time = "3 pm"
+        date = extractor.getDate()
+        time = extractor.getTime()
         locations = extractor.getLocations()
         print("Before jsonify", file=sys.stderr)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
@@ -133,18 +133,20 @@ def addEventToCalendar():
         
         print("Adding new event", file=sys.stderr)
         date = request.form['date']
-        time = request.form['time']
+        time = request.form['start_time']
+        end_time = request.form['end_time']
         location = request.form['location']
+        title = request.form['title']
         print("Date: " + date, file=sys.stderr)
         print("Time: " + time, file=sys.stderr)
         print("Location: " + location, file=sys.stderr)
 
         # Call the Calendar API
         datetime_request = turnToDateTime(date, time)
-        datetime_end_request = str(datetime.datetime(year=2019, month=5, day=10, hour=11, minute=0).isoformat())
+        datetime_end_request = turnToDateTime(date, end_time)
         
         insert_body = {
-            "summary" : "Tarcan kutlama 4",
+            "summary" : title,
             "start" : {
                 "dateTime" : datetime_request,
                 "timeZone" : "America/Indiana/Indianapolis",
@@ -154,7 +156,7 @@ def addEventToCalendar():
                 "dateTime" : datetime_end_request,
                 "timeZone" : "America/Indiana/Indianapolis",
             },
-            "location" : "Amasya"
+            "location" : location
         }
         service = build('calendar', 'v3', credentials=creds)
         

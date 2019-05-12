@@ -23,6 +23,6 @@ public interface CalloutAPI
 
     @FormUrlEncoded
     @POST("calendar")
-    Call<ResponseBody> sendToGoogleCalendar(@Field("token") String idToken, @Field("authcode") String auth_code, @Field("date") String date, @Field("time") String time,
-                                           @Field("location") String location);
+    Call<ResponseBody> sendToGoogleCalendar(@Field("token") String idToken, @Field("authcode") String auth_code, @Field("date") String date, @Field("start_time") String start_time,
+                                           @Field("end_time") String end_time,@Field("location") String location, @Field("title") String title);
 }
