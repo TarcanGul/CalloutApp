@@ -252,7 +252,17 @@ public class ParserActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     Log.d("Calendar-Server", "Calendar Connection Successful");
-
+                    parserScreen.setVisibility(View.GONE);
+                    builder.setMessage("Added to calendar successfully!");
+                    builder.setPositiveButton("Return To Camera", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent goBackIntent = new Intent(getApplicationContext(), MainActivity.class);
+                            startActivity(goBackIntent);
+                        }
+                    });
+                    // Create the AlertDialog
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
                 }
 
                 @Override

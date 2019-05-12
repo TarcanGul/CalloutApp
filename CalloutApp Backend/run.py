@@ -57,7 +57,7 @@ def sendParsingInformation(image):
         
         dir_path = app.config['UPLOAD_FOLDER']
          #Putting the image.
-        parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,image)))
+        parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,image))
         if not parsedText:
             print("Parsed Text is empty.", file=sys.stderr)
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
