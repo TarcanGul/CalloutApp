@@ -12,14 +12,14 @@ Take a photo of a callout poster from your Android phone and the app will add th
 <p>There is no other good way to test the app via emulator camera other than changing which image the server processes manually. So I did a manual testing with this particular event:</p>
 <img src="http://i64.tinypic.com/dgj8fa.jpg" width="50%" height="500">
 
-<p>After clicking "Parse and Send to Google Calendar", we sent the image to a server. Server is right now is just hosted in my local environment, might deploy it in a simple setup soon.</p> 
+<p>After clicking "Parse and Send to Google Calendar", we sent the image to a server. Server is right now is just hosted in a local environment, in the future deployment is needed.</p> 
 <img src="http://i66.tinypic.com/33ypanc.jpg" width="50%" height="500">
 
 <p>After waiting, we get this screen prefilled:</p>
 <img src="http://i65.tinypic.com/rvc360.jpg" width="50%" height="500">
 
-<p>I added title to it. Now the event is ready to be sent. You can also choose to not have a title and send it directly.</p>
+<p>Title is now added manually by the user. Now the event is ready to be sent. You can also choose to not have a title and send it directly.</p>
 <img src="http://i68.tinypic.com/k365hw.jpg" width="50%" height="500">
 
-<p>Here is the event added in the person's account (which in this case is me):</p>
+<p>Here is the event added in the user's account:</p>
 <img src="http://i67.tinypic.com/15znr84.jpg" width="50%" height="50%">
