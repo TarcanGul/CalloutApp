@@ -11,6 +11,7 @@ def printList(test_image):
     parsedList = parsedText.split()
     return str(parsedList)
 
+#TODO: Testing the dataExtractor
 class test_dataExtractor_date(unittest.TestCase):
     def test_1(self):
         pass
