@@ -26,4 +26,5 @@ public class Result {
     public ArrayList<String> getLocations() {
         return locations;
     }
+
 }

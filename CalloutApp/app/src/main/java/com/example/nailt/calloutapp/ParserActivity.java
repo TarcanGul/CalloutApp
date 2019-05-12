@@ -1,6 +1,9 @@
 package com.example.nailt.calloutapp;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -17,6 +20,8 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,19 +52,29 @@ public class ParserActivity extends AppCompatActivity {
     TextView timeField;
     Spinner locationField;
     EditText titleField;
-
-
+    ProgressBar spinner;
+    LinearLayout parserScreen;
+    Button sendButton;
     GoogleAccountCredential credential;
     GoogleSignInOptions gso;
-
+    public static Toast transitionToast;
     GoogleSignInClient mGoogleSignInClient;
     private static final Scope CALENDAR_AUTH_TOKEN = new Scope("https://www.googleapis.com/auth/calendar.events");
     private static final int RC_SIGN_IN = 9001;
-    private class SendInputThread implements Runnable
+
+    private class SendInputTask extends AsyncTask<Void, String, Integer>
     {
-        public void run()
+        @Override
+        protected void onPreExecute() {
+
+            parserScreen.setVisibility(View.INVISIBLE);
+            spinner.setVisibility(View.VISIBLE);
+            transitionToast = Toast.makeText(getApplicationContext(), "Parsing...", Toast.LENGTH_LONG);
+            transitionToast.show();
+        }
+
+        protected Integer doInBackground(Void... params)
         {
-            //TODO: Get image input from main activity, send to flask server
             Uri takenImage = getIntent().getExtras().getParcelable("imageUri");
             Log.d("Image URI:", takenImage.toString());
             if(takenImage != null)
@@ -71,40 +86,67 @@ public class ParserActivity extends AppCompatActivity {
                 c.moveToFirst();
                 int columnIndex = c.getColumnIndex(path[0]);
                 filePathStr = c.getString(columnIndex);
-                    File file = new File(filePathStr);
-                    RequestBody requestFile =
-                            RequestBody.create(MediaType.parse("multipart/form-data"), file);
-                    MultipartBody.Part part = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
-                    Call<Result> inputCall = Client.getClientInstance().getAPI().sendImageToServer(part);
-                    inputCall.enqueue(new Callback<Result>() {
-                        Result result;
-                        @Override
-                        public void onResponse(Call<Result> call, Response<Result> response) {
-                            Log.d("Image input", "Image input successful");
-                            Log.d("JSON", "Success!");
-                            result = response.body();
-                            dateField.setText(result.getDate());
-                            timeField.setText(result.getTime());
-                            Log.d("JSON", response.body().toString());
-                            locationField.setAdapter(new ArrayAdapter<String>(getApplicationContext(),
-                                    R.layout.support_simple_spinner_dropdown_item,
-                                    result.getLocations()));
-                        }
+                File file = new File(filePathStr);
+                RequestBody requestFile =
+                        RequestBody.create(MediaType.parse("multipart/form-data"), file);
+                MultipartBody.Part part = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+                Call<Result> inputCall = Client.getClientInstance().getAPI().sendImageToServer(part);
+                inputCall.enqueue(new Callback<Result>() {
+                    Result result;
+                    @Override
+                    public void onResponse(Call<Result> call, Response<Result> response) {
+                        Log.d("Image input", "Image input successful");
+                        Log.d("JSON", "Success!");
+                        if(transitionToast != null) transitionToast.cancel();
+                        transitionToast = Toast.makeText(getApplicationContext(), "Parsing successful!", Toast.LENGTH_LONG);
+                        transitionToast.show();
+                        spinner.setVisibility(View.GONE);
+                        parserScreen.setVisibility(View.VISIBLE);
+                        sendButton.setEnabled(true);
+                        result = response.body();
+                        dateField.setText(result.getDate());
+                        timeField.setText(result.getTime());
+                        Log.d("JSON", response.body().toString());
+                        locationField.setAdapter(new ArrayAdapter<String>(getApplicationContext(),
+                                R.layout.support_simple_spinner_dropdown_item,
+                                result.getLocations()));
+                    }
 
-                        @Override
-                        public void onFailure(Call<Result> call, Throwable t) {
-                            Log.d("Image input", t.getMessage());
-                        }
-                    });
+                    @Override
+                    public void onFailure(Call<Result> call, Throwable t) {
+                        spinner.setVisibility(View.GONE);
+                        Log.d("Image input", t.getMessage());
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ParserActivity.this);
+// Add the buttons
+                        builder.setMessage("Error: " + t.getMessage());
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User clicked OK button
+                            }
+                        });
+                        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User cancelled the dialog
+                            }
+                        });
+// Create the AlertDialog
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+
+                    }
+                });
 
             }
             else {
                 Log.d("Taken image", "Taken image is null");
             }
+            return 0;
+        }
 
+        @Override
+        protected void onPostExecute(Integer result) {
         }
     }
-
 
 
     @Override
@@ -115,30 +157,26 @@ public class ParserActivity extends AppCompatActivity {
                 .requestEmail()
                 .build();
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_parser);
         dateField = (TextView) findViewById(R.id.dateField);
         timeField = (TextView)  findViewById(R.id.timeField);
         locationField = (Spinner)  findViewById(R.id.locationField);
         titleField = (EditText) findViewById(R.id.titleField);
+
+        spinner = (ProgressBar)findViewById(R.id.progressBar1);
+        parserScreen = (LinearLayout) findViewById(R.id.parserScreen);
         Button backButton = (Button) findViewById(R.id.backButton);
-        Button sendButton = (Button) findViewById(R.id.sendButton);
-        sendButton.setEnabled(false);
+        sendButton = (Button) findViewById(R.id.sendButton);
+
         sendButton.setOnClickListener(sendButtonListener);
         backButton.setOnClickListener(backButtonListener);
 
 
-        Runnable inputRunnable = new SendInputThread();
-        Thread inputSendingthread = new Thread(inputRunnable);
-        inputSendingthread.start();
-        try {
-            inputSendingthread.join();
-            sendButton.setEnabled(true);
 
-        }
-        catch(InterruptedException e)
-        {
-            Log.d("Input Thread interruption", e.getMessage());
-        }
+        //Runnable inputRunnable = new SendInputThread();
+        //Thread inputSendingthread = new Thread(inputRunnable);
+        new SendInputTask().execute();
     }
 
     View.OnClickListener backButtonListener = new View.OnClickListener() {

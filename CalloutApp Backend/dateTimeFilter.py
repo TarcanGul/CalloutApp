@@ -2,7 +2,33 @@ import datetime
 from dataExtractor import monthAbbreviations
 
 def __findMonthNumber(month_string):
-    return int(monthAbbreviations.index(month_string) / 3) + 1
+    first_three_letters = month_string[0:3]
+    if first_three_letters == 'jan':
+        return 1
+    elif first_three_letters == 'feb':
+        return 2
+    elif first_three_letters == 'mar':
+        return 3
+    elif first_three_letters == 'apr':
+        return 4
+    elif first_three_letters == 'may':
+        return 5
+    elif first_three_letters == 'jun':
+        return 6
+    elif first_three_letters == 'jul':
+        return 7
+    elif first_three_letters == 'aug':
+        return 8
+    elif first_three_letters == 'sep':
+        return 9
+    elif first_three_letters == 'oct':
+        return 10
+    elif first_three_letters == 'nov':
+        return 11
+    elif first_three_letters == 'dec':
+        return 12
+    else:
+        return None
 
 def __hasPunc(time_string):
     punc = ['.', '-', ':']

@@ -63,6 +63,7 @@ def sendParsingInformation(image):
         time = "3 pm"
         locations = extractor.getLocations()
         print("Before jsonify", file=sys.stderr)
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
         return jsonify(date=date, time=time, locations=locations)
 
     

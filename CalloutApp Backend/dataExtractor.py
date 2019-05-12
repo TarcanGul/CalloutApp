@@ -1,22 +1,22 @@
 import os
 import re
-#from googleplaces import GooglePlaces, types, lang
+import sys
+import mysql.connector
 
-API_KEY = 'AIzaSyAVGOibW9k5jOPiZL_zfR1PHCbkkqXo08s'
 
-#google_places = GooglePlaces(API_KEY)
 #The two None's is for aligning the months so that every 3 entries is a different month. 
-#The way we find the month is dividing the index by 3 and adding 1. 
 monthAbbreviations = ['jan', 'jan.', 'january', 'feb', 'feb.', 'february', 'mar', 'mar.', 'march',  
-'apr', 'apr.', 'april', 'may',None, None, 'jun', 'jun.', 'june', 'jul', 'jul.', 'july', 'aug', 'aug.', 'august', 
+'apr', 'apr.', 'april', 'may', 'jun', 'jun.', 'june', 'jul', 'jul.', 'july', 'aug', 'aug.', 'august', 
 'sep', 'sept', 'sep.', 'sept.', 'september', 'oct', 'oct.', 'october', 'nov', 'nov.', 'november', 'dec', 'dec.', 'december']
 
 punctuations = {'.', ',', '!', '?', ':', '\'', '\"', ';'}
 
+db = mysql.connector.connect(host="localhost", user="CalloutAppClient", password="ExtremeDeadmau5!", database="locations")
+cursor = db.cursor()
+
 date = ""
 time = ''
 locations = []
-titles = []
 
 class InfoExtractor:
     
@@ -83,25 +83,22 @@ class InfoExtractor:
                         time = extracted_time + word[-2:]
                     continue
 
+            if any(ch.isdigit() for ch in list[i]) or len(list[i]) == 1 or any(ch in punctuations for ch in list[i]):
+                continue
+            
+            #checking location using our locations database in mysql. 
+            
+            query_string = f"SELECT location_name from `west lafayette` WHERE location_name LIKE '%{list[i]} %' OR location_name LIKE '% {list[i]}%';"
+            cursor.execute(query_string)
+            result = cursor.fetchall()
+            if result != None:
+                for entry in result:
+                    if entry[0] not in locations:
+                        locations.append(entry[0])
 
-            #checking location
-            #query_result = google_places.nearby_search(location='West Lafayette, United States', keyword=list[i])
-            #if len(query_result.places) > 0:
-            #     location = query_result.places[0].name
-            #     if i < len(list)-1:
-            #         self.locations.append(query_result.places[0].name + ' Room ' + list[i+1])
-            #     else:
-            #         self.locations.append(query_result.places[0].name)
-            self.locations = ['aahan']
-            #if(i < 6):
-            #   self.titles.append(list[i])
-        #if date == "":
-        #    date = "not found"
     def getDate(self):
         return date
     def getTime(self):
         return time
     def getLocations(self):
-        return self.locations
-    def getTitles(self):
-        return self.titles
+        return locations

@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int THUMBNAIL_SIZE = 200;
     Bitmap current_image;
     static Uri imageUri;
-    public static Toast transitionToast;
+
     ImageView i_view;
     Button takePhotoAgainButton;
     Button parseAndSendButton;
@@ -145,10 +145,9 @@ public class MainActivity extends AppCompatActivity {
     View.OnClickListener parseAndSendListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            transitionToast = Toast.makeText(getApplicationContext(), "Parsing...", Toast.LENGTH_LONG);
+
             Intent intent = new Intent(MainActivity.this, ParserActivity.class);
             intent.putExtra("imageUri", imageUri);
-            transitionToast.show();
             startActivity(intent);
         }
     };
