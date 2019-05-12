@@ -55,28 +55,28 @@ def getImageInput():
 
 def sendParsingInformation(image):
         
-        dir_path = app.config['UPLOAD_FOLDER']
-         #Putting the image.
-        parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,image))
-        if not parsedText:
-            print("Parsed Text is empty.", file=sys.stderr)
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
-            return jsonify(date=None, time=None, end_time=None, locations=[])
-        parsedList = parsedText.split()
-        #This image doesn't have any text. 
-        
-        #Creating extractor object
-        extractor = InfoExtractor()
-        extractor.extractWords(parsedList)
-        
-        date = extractor.getDate()
-        time = extractor.getTime()
-        end_time = extractor.getEndTime()
-        print("End time:" + str(end_time), file=sys.stderr)
-        locations = extractor.getLocations()
-        print("Before jsonify", file=sys.stderr)
+    dir_path = app.config['UPLOAD_FOLDER']
+    #Putting the image.
+    parsedText = pytesseract.image_to_string(Image.open(os.path.join(dir_path,image)))
+    if not parsedText:
+        print("Parsed Text is empty.", file=sys.stderr)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
-        return jsonify(date=date, time=time, end_time=end_time, locations=locations)
+        return jsonify(date=None, time=None, end_time=None, locations=[])
+    parsedList = parsedText.split()
+    #This image doesn't have any text. 
+        
+    #Creating extractor object
+    extractor = InfoExtractor()
+    extractor.extractWords(parsedList)
+        
+    date = extractor.getDate()
+    time = extractor.getTime()
+    end_time = extractor.getEndTime()
+    print("End time:" + str(end_time), file=sys.stderr)
+    locations = extractor.getLocations()
+    print("Before jsonify", file=sys.stderr)
+    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image))
+    return jsonify(date=date, time=time, end_time=end_time, locations=locations)
 
 
 @app.route("/calendar", methods=['GET', 'POST'])
