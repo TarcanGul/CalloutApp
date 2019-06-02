@@ -11,7 +11,7 @@ monthAbbreviations = ['jan', 'jan.', 'january', 'feb', 'feb.', 'february', 'mar'
 
 punctuations = {'.', ',', '!', '?', ':', '\'', '\"', ';'}
 
-db = mysql.connector.connect(host="localhost", user="CalloutAppClient", password="ExtremeDeadmau5!", database="locations")
+db = mysql.connector.connect(host="localhost", user=os.environ["CALLOUTUSER"], password=os.environ["CALLOUTAPPDATABASEPASS"], database="locations")
 cursor = db.cursor()
 
 date = ""
